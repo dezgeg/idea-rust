@@ -13,6 +13,8 @@ import vektah.rust.psi.RustTokens;
 %unicode
 %function advance
 %type IElementType
+%eof{  return;
+%eof}
 %{
 	private int start_comment;
 	private int start_raw_string;
@@ -27,9 +29,8 @@ XID_CONTINUE = [a-zA-Z0-9_]
 HEX_DIGIT = [a-fA-F0-9]
 DOUBLE_QUOTE = \x22
 SINGLE_QUOTE = \x27
-COMMON_ESCAPE = ( [nrt0\n\r\\] | "x" {HEX_DIGIT} {2} | "u" {HEX_DIGIT} {4} | "U" {HEX_DIGIT} {8} )
-CHAR = {SINGLE_QUOTE} (( [^'\\] | "\\" ( {SINGLE_QUOTE} | {COMMON_ESCAPE}) ) | [^\x20-\x7E]{1,2}) {SINGLE_QUOTE}
-STRING = {DOUBLE_QUOTE} ( [^\"\\] | "\\" ( {DOUBLE_QUOTE} | {SINGLE_QUOTE} | {COMMON_ESCAPE}) )* {DOUBLE_QUOTE}
+CHAR = {SINGLE_QUOTE} (( [^'\\] | "\\" . ) | [^\x20-\x7E]{1,2}) {SINGLE_QUOTE}?
+STRING = {DOUBLE_QUOTE} ( [^\"\\] | "\\" . )* {DOUBLE_QUOTE}?
 NUM_SUFFIX = {INT_SUFFIX} | {FLOAT_SUFFIX}
 INT_SUFFIX = [ui] ( "8" | "16" | "32" | "64" )?
 EXPONENT = [eE] [-+]? ([0-9] | "_" )+
@@ -92,7 +93,7 @@ HEX_LIT = "0x" [a-fA-F0-9_]+ {INT_SUFFIX}?
 	"//" [^\n\r]*                                   { yybegin(YYINITIAL); return RustTokens.LINE_COMMENT; }
 	{CHAR}                                          { yybegin(YYINITIAL); return RustTokens.CHAR_LIT; }
 	{STRING}                                        { yybegin(YYINITIAL); return RustTokens.STRING_LIT; }
-	"r" "#"* {DOUBLE_QUOTE}                         { yybegin(IN_RAW_STRING); start_raw_string = zzStartRead; raw_string_hashes = yytext().length() - 1; }
+	"r" ("#"* {DOUBLE_QUOTE} | "#"+)                { yybegin(IN_RAW_STRING); start_raw_string = zzStartRead; raw_string_hashes = yytext().length() - 1; }
 
 	{BIN_LIT}                                       { yybegin(YYINITIAL); return RustTokens.BIN_LIT; }
 	{OCT_LIT}                                       { yybegin(YYINITIAL); return RustTokens.OCT_LIT; }

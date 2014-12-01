@@ -1,10 +1,12 @@
 package vektah.rust;
 
 import com.intellij.lexer.FlexAdapter;
+import com.intellij.lexer.LayeredLexer;
 import com.intellij.lexer.Lexer;
 import com.intellij.openapi.editor.DefaultLanguageHighlighterColors;
 import com.intellij.openapi.editor.colors.TextAttributesKey;
 import com.intellij.openapi.fileTypes.SyntaxHighlighterBase;
+import com.intellij.psi.StringEscapesTokenTypes;
 import com.intellij.psi.tree.IElementType;
 import org.jetbrains.annotations.NotNull;
 import vektah.rust.psi.RustTokens;
@@ -29,6 +31,8 @@ public class RustSyntaxHighlighter extends SyntaxHighlighterBase {
 	public static final TextAttributesKey SEMICOLON = TextAttributesKey.createTextAttributesKey("SEMICOLON", DefaultLanguageHighlighterColors.SEMICOLON);
 	public static final TextAttributesKey OPERATOR = TextAttributesKey.createTextAttributesKey("OPERATOR", DefaultLanguageHighlighterColors.OPERATION_SIGN);
 	public static final TextAttributesKey PATH_SEPARATOR = TextAttributesKey.createTextAttributesKey("PATH_SEPARATOR", DefaultLanguageHighlighterColors.OPERATION_SIGN);
+	public static final TextAttributesKey VALID_STRING_ESCAPE = TextAttributesKey.createTextAttributesKey("VALID_STRING_ESCAPE", DefaultLanguageHighlighterColors.VALID_STRING_ESCAPE);
+	public static final TextAttributesKey INVALID_STRING_ESCAPE = TextAttributesKey.createTextAttributesKey("INVALID_STRING_ESCAPE", DefaultLanguageHighlighterColors.INVALID_STRING_ESCAPE);
 	public static final TextAttributesKey ATTRIBUTE = TextAttributesKey.createTextAttributesKey("ATTRIBUTE", DefaultLanguageHighlighterColors.METADATA);
 
 	public static final TextAttributesKey[] KEYWORD_KEYS = new TextAttributesKey[]{KEYWORD};
@@ -46,12 +50,17 @@ public class RustSyntaxHighlighter extends SyntaxHighlighterBase {
 	public static final TextAttributesKey[] SEMICOLON_KEYS = new TextAttributesKey[]{SEMICOLON};
 	public static final TextAttributesKey[] OPERATOR_KEYS = new TextAttributesKey[]{OPERATOR};
 	public static final TextAttributesKey[] PATH_SEPARATOR_KEYS = new TextAttributesKey[]{PATH_SEPARATOR};
+	public static final TextAttributesKey[] VALID_STRING_ESCAPE_KEYS = new TextAttributesKey[]{VALID_STRING_ESCAPE};
+	public static final TextAttributesKey[] INVALID_STRING_ESCAPE_KEYS = new TextAttributesKey[]{INVALID_STRING_ESCAPE};
 	public static final TextAttributesKey[] EMPTY_KEYS = new TextAttributesKey[0];
 
 	@NotNull
 	@Override
 	public Lexer getHighlightingLexer() {
-		return new FlexAdapter(new RustLexer((Reader) null));
+		LayeredLexer ret = new LayeredLexer(new FlexAdapter(new RustLexer((Reader) null)));
+		ret.registerSelfStoppingLayer(new RustStringLiteralLexer(RustTokens.STRING_LIT),
+				new IElementType[] { RustTokens.STRING_LIT }, IElementType.EMPTY_ARRAY);
+		return ret;
 	}
 
 	@NotNull
@@ -109,6 +118,12 @@ public class RustSyntaxHighlighter extends SyntaxHighlighterBase {
 		}
 		if (type == CHAR_LIT || type == STRING_LIT || type == RAW_STRING_LIT) {
 			return STRING_KEYS;
+		}
+		if (type == StringEscapesTokenTypes.VALID_STRING_ESCAPE_TOKEN) {
+			return VALID_STRING_ESCAPE_KEYS;
+		}
+		if (type == StringEscapesTokenTypes.INVALID_CHARACTER_ESCAPE_TOKEN || type == StringEscapesTokenTypes.INVALID_UNICODE_ESCAPE_TOKEN) {
+			return INVALID_STRING_ESCAPE_KEYS;
 		}
 		if (type == DEC_LIT || type == OCT_LIT || type == HEX_LIT || type == BIN_LIT) {
 			return NUMBER_KEYS;
