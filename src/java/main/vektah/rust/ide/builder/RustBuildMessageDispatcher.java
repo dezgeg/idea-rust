@@ -17,16 +17,13 @@ package vektah.rust.ide.builder;
 
 import com.intellij.compiler.server.BuilderMessageHandler;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.util.containers.ConcurrentHashSet;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.jps.api.CmdlineProtoUtil;
 import org.jetbrains.jps.api.CmdlineRemoteProto;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @ChannelHandler.Sharable
@@ -34,7 +31,7 @@ class RustBuildMessageDispatcher {
   private static final Logger LOG = Logger.getInstance(RustBuildMessageDispatcher.class);
 
   private final Map<UUID, SessionData> myMessageHandlers = new ConcurrentHashMap<UUID, SessionData>(16, 0.75f, 1);
-  private final Set<UUID> myCanceledSessions = new ConcurrentHashSet<UUID>();
+  private final Set<UUID> myCanceledSessions = Collections.synchronizedSet(new HashSet<UUID>());
 
   public void registerBuildMessageHandler(UUID sessionId,
                                           BuilderMessageHandler handler) {
