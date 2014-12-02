@@ -39,6 +39,7 @@
       <lang.commenter language="Rust" implementationClass="vektah.rust.highlight.RustCommenter"/>
       <lang.braceMatcher language="Rust" implementationClass="vektah.rust.highlight.RustBraceMatcher"/>
       <lang.foldingBuilder language="Rust" implementationClass="vektah.rust.folding.RustFoldingBuilder"/>
+      <quoteHandler fileType="Rust Source" className="vektah.rust.RustQuoteHandler"/>
 
       <codeStyleSettingsProvider implementation="vektah.rust.ide.RustCodeStyleSettingsProvider"/>
       <langCodeStyleSettingsProvider implementation="vektah.rust.ide.RustLanguageCodeStyleSettingsProvider"/>
